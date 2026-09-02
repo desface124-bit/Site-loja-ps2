@@ -10,7 +10,7 @@
 #include <gsInline.h>
 
 // Definição de Cores Auxiliar
-#define rgba(r, g, b, a) GS_SETREG_RGBAQ(r, g, b, a, 0x00)
+#define rgba(r, g, b, a) GS_SETREG_RGBA(r, g, b, a)
 
 // Ponteiros Globais do gsKit
 static GSGLOBAL *gsGlobal = NULL;
@@ -135,7 +135,7 @@ static int init_graphics(void)
 
     gsKit_init_screen(gsGlobal);
     gsKit_mode_switch(gsGlobal, GS_PERSISTENT);
-    gsKit_clear(gsGlobal, GS_SETREG_RGBAQ(255, 255, 255, 0));
+    gsKit_clear(gsGlobal, rgba(255, 255, 255, 0));
 
     fontm = gsKit_init_fontm();
     if (fontm != NULL) {
