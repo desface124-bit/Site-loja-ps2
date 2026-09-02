@@ -16,13 +16,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install build tools
-        run: |
-          apk add --no-updates make gcc musl-dev || apt-get update && apt-get install -y make build-essential || true
+        run: apk add --no-cache make build-base
 
       - name: Compile PS2 App
         run: |
           make clean || true
           make
+        env:
+          PS2SDK: /usr/local/ps2dev/ps2sdk
+          PATH: /usr/local/ps2dev/bin:/usr/local/ps2dev/ee/bin:/usr/local/ps2dev/iop/bin:/usr/local/ps2dev/dvp/bin:${{ env.PATH }}
 
       - name: Upload ELF Artifact
         uses: actions/upload-artifact@v4
