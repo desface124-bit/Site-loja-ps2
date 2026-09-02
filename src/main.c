@@ -32,14 +32,14 @@ u32 read_pad_raw(void) { return 0; }
 // Função para Desenhar Retângulos/Caixas Usando gsKit NATIVO
 static void drawBox(float x1, float y1, float x2, float y2, u64 color)
 {
-    gsKit_prim_sprite_color(gsGlobal, x1, y1, x2, y2, 1, color);
+    gsKit_prim_sprite(gsGlobal, x1, y1, x2, y2, 1, color);
 }
 
 // Função para Desenhar Texto Usando gsFontM NATIVO
 static void drawText(float x, float y, float scale, u64 color, const char *text)
 {
     if (fontm != NULL) {
-        gsKit_fontm_print_scaled(gsGlobal, fontm, x, y, 1, scale, color, text);
+        gsKit_fontm_print(gsGlobal, fontm, x, y, 1, color, text);
     }
 }
 
