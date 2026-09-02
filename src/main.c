@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include <tamtypes.h>
 #include <kernel.h>
 #include <sifrpc.h>
@@ -19,15 +20,90 @@ static GSFONTM *fontm = NULL;
 // Variáveis Globais de Controle e Estado
 static u32 oldPad = 0;
 static char statusLine[128] = "Pronto.";
-static char targetUrl[128] = "http://siteps2.local";
+static char targetUrl[128] = "https://sualoja.com";
 static char storeName[64] = "LOJA PS2 WEB";
-static char videoModeStr[32] = "AUTO (NTSC/PAL)";
-static int videoModeVal = GS_MODE_NTSC;
+static char videoModeStr[32] = "480p (60Hz)";
+static int videoModeVal = GS_MODE_DTV_480P;
 
 // Protótipos de Funções Auxiliares
-void load_config(void) {}
 void init_pad(void) {}
 u32 read_pad_raw(void) { return 0; }
+
+// Função para remover espaços em branco do início e fim da string
+static char* trim(char *str)
+{
+    char *end;
+    while(isspace((unsigned char)*str)) str++;
+    if(*str == 0) return str;
+    end = str + strlen(str) - 1;
+    while(end > str && isspace((unsigned char)*end)) end--;
+    end[1] = '\0';
+    return str;
+}
+
+// Mapeia a string lida do CFG para os modos de vídeo do gsKit
+static void set_video_mode_from_str(const char *modeStr)
+{
+    if (strcasecmp(modeStr, "720p") == 0) {
+        videoModeVal = GS_MODE_DTV_720P;
+        snprintf(videoModeStr, sizeof(videoModeStr), "720p (HD)");
+    } else if (strcasecmp(modeStr, "1080i") == 0) {
+        videoModeVal = GS_MODE_DTV_1080I;
+        snprintf(videoModeStr, sizeof(videoModeStr), "1080i (HD)");
+    } else if (strcasecmp(modeStr, "480p") == 0) {
+        videoModeVal = GS_MODE_DTV_480P;
+        snprintf(videoModeStr, sizeof(videoModeStr), "480p (Progressivo)");
+    } else if (strcasecmp(modeStr, "pal") == 0) {
+        videoModeVal = GS_MODE_PAL;
+        snprintf(videoModeStr, sizeof(videoModeStr), "PAL (50Hz)");
+    } else if (strcasecmp(modeStr, "ntsc") == 0) {
+        videoModeVal = GS_MODE_NTSC;
+        snprintf(videoModeStr, sizeof(videoModeStr), "NTSC (60Hz)");
+    }
+}
+
+// Função para Carregar e Interpretar a Configuração com Rótulos do Pendrive
+void load_config(void)
+{
+    FILE *f = fopen("mass:/SITEPS2/CONFIG.CFG", "rb");
+    if (f == NULL) {
+        f = fopen("mass:/CONFIG.CFG", "rb");
+    }
+
+    if (f != NULL) {
+        char line[256];
+        while (fgets(line, sizeof(line), f) != NULL) {
+            // Remove quebras de linha
+            line[strcspn(line, "\r\n")] = 0;
+            
+            char *cleanLine = trim(line);
+            if (strlen(cleanLine) == 0 || cleanLine[0] == '#') continue; // Ignora linhas vazias/comentários
+
+            // Procura o caractere ':'
+            char *sep = strchr(cleanLine, ':');
+            if (sep != NULL) {
+                *sep = '\0'; // Separa chave e valor
+                char *key = trim(cleanLine);
+                char *val = trim(sep + 1);
+
+                // Reconstitui o valor para URLs (ex: https://...)
+                if (sep[1] == '/' && sep[2] == '/') {
+                    *(sep) = ':';
+                }
+
+                if (strcasecmp(key, "Site") == 0) {
+                    snprintf(targetUrl, sizeof(targetUrl), "%s", val);
+                } else if (strcasecmp(key, "Vídeo mode") == 0 || strcasecmp(key, "Video mode") == 0) {
+                    set_video_mode_from_str(val);
+                }
+            }
+        }
+        snprintf(statusLine, sizeof(statusLine), "Configuracao e Video lidos do USB!");
+        fclose(f);
+    } else {
+        snprintf(statusLine, sizeof(statusLine), "CONFIG.CFG nao encontrado. Usando padrao.");
+    }
+}
 
 // Função para Desenhar Retângulos/Caixas Usando gsKit NATIVO
 static void drawBox(float x1, float y1, float x2, float y2, u64 color)
@@ -152,13 +228,16 @@ int main(int argc, char *argv[])
 
     SifInitRpc(0);
 
+    // Carrega e interpreta a configuração do USB
+    load_config();
+
+    // Inicializa a tela gráfica com o modo de vídeo lido do CFG
     ret = init_graphics();
     if (ret < 0) {
         SleepThread();
         return 1;
     }
 
-    load_config();
     init_pad();
 
     for (;;) {
