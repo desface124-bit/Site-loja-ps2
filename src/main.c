@@ -5,6 +5,7 @@
 #include <sifrpc.h>
 #include <libpad.h>
 #include <gsKit.h>
+#include <gsFontM.h>
 #include <dmaKit.h>
 #include <gsInline.h>
 
@@ -13,7 +14,7 @@
 
 // Ponteiros Globais do gsKit
 static GSGLOBAL *gsGlobal = NULL;
-static GSFONT *fontm = NULL;
+static GSFONTM *fontm = NULL;
 
 // Variáveis Globais de Controle e Estado
 static u32 oldPad = 0;
@@ -23,18 +24,18 @@ static char storeName[64] = "LOJA PS2 WEB";
 static char videoModeStr[32] = "AUTO (NTSC/PAL)";
 static int videoModeVal = GS_MODE_NTSC;
 
-// Protótipos de Funções Não Definidas Neste Trecho
+// Protótipos de Funções Auxiliares
 void load_config(void) {}
 void init_pad(void) {}
 u32 read_pad_raw(void) { return 0; }
 
-// Função para Desenhar Caixas/Retângulos Usando gsKit NATIVO
+// Função para Desenhar Retângulos/Caixas Usando gsKit NATIVO
 static void drawBox(float x1, float y1, float x2, float y2, u64 color)
 {
     gsKit_prim_sprite_color(gsGlobal, x1, y1, x2, y2, 1, color);
 }
 
-// Função para Desenhar Texto Usando gsKit NATIVO
+// Função para Desenhar Texto Usando gsFontM NATIVO
 static void drawText(float x, float y, float scale, u64 color, const char *text)
 {
     if (fontm != NULL) {
@@ -65,19 +66,19 @@ static void render(void)
     float w = (float)gsGlobal->Width;
     float h = (float)gsGlobal->Height;
 
-    // Palette Light Mode
-    u64 bg = rgba(245, 247, 250, 255);
-    u64 topBar = rgba(255, 255, 255, 255);
-    u64 border = rgba(210, 215, 225, 255);
-    u64 cardBg = rgba(255, 255, 255, 255);
-    u64 textDark = rgba(20, 24, 33, 255);
-    u64 textMuted = rgba(100, 110, 125, 255);
-    u64 accentBlue = rgba(24, 119, 242, 255);
-    u64 accentGreen = rgba(34, 197, 94, 255);
+    // Palette Light Mode (Fundo Claro / Texto Escuro)
+    u64 bg = rgba(245, 247, 250, 255);       // Fundo branco/gelo
+    u64 topBar = rgba(255, 255, 255, 255);   // Barra superior branca
+    u64 border = rgba(210, 215, 225, 255);   // Linhas e bordas cinza claro
+    u64 cardBg = rgba(255, 255, 255, 255);   // Painel principal
+    u64 textDark = rgba(20, 24, 33, 255);    // Texto preto/grafite
+    u64 textMuted = rgba(100, 110, 125, 255);// Texto cinza
+    u64 accentBlue = rgba(24, 119, 242, 255);// Azul Destaque
+    u64 accentGreen = rgba(34, 197, 94, 255);// Verde Status
 
     gsKit_clear(gsGlobal, bg);
 
-    // Top Bar
+    // Top Bar (Branca com linha divisória cinza)
     drawBox(0, 0, w, 50, topBar);
     drawBox(0, 49, w, 50, border);
     drawText(20, 12, 0.75f, textDark, storeName);
@@ -88,11 +89,11 @@ static void render(void)
     drawBox(20, 70, w - 20, 71, border);
     drawBox(20, h - 50, w - 20, h - 49, border);
 
-    // Ícone de Web
+    // Símbolo/Ícone de Web (Desenhado via Sprite)
     drawBox(40, 90, 56, 106, accentBlue);
     drawText(65, 90, 0.65f, textDark, "ENDERECO CONFIGURADO:");
 
-    // Input Box do Link
+    // Input Box do Link (Estilo caixa de navegação)
     drawBox(40, 120, w - 40, 160, bg);
     drawBox(40, 120, w - 40, 121, border);
     drawBox(40, 159, w - 40, 160, border);
@@ -136,8 +137,8 @@ static int init_graphics(void)
     gsKit_mode_switch(gsGlobal, GS_PERSISTENT);
     gsKit_clear(gsGlobal, GS_SETREG_RGBAQ(255, 255, 255, 0));
 
-    fontm = gsKit_init_fontm(GSKIT_FTYPE_FONTM);
-    if (fontm) {
+    fontm = gsKit_init_fontm();
+    if (fontm != NULL) {
         gsKit_fontm_upload(gsGlobal, fontm);
     }
 
