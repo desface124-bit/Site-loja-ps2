@@ -15,6 +15,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install build tools
+        run: |
+          apk add --no-updates make gcc musl-dev || apt-get update && apt-get install -y make build-essential || true
+
       - name: Compile PS2 App
         run: |
           make clean || true
