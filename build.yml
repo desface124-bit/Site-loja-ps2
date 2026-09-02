@@ -1,0 +1,27 @@
+name: Compile PS2 ELF
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: ps2dev/ps2dev:latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Compile PS2 App
+        run: |
+          make clean
+          make
+
+      - name: Upload ELF Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: PS2STORE-ELF
+          path: PS2STORE.ELF
