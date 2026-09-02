@@ -23,8 +23,10 @@ jobs:
           make clean || true
           make
         env:
+          PS2DEV: /usr/local/ps2dev
           PS2SDK: /usr/local/ps2dev/ps2sdk
-          PATH: /usr/local/ps2dev/bin:/usr/local/ps2dev/ee/bin:/usr/local/ps2dev/iop/bin:/usr/local/ps2dev/dvp/bin:${{ env.PATH }}
+          GSKIT: /usr/local/ps2dev/gsKit
+          PATH: /usr/local/ps2dev/bin:/usr/local/ps2dev/ee/bin:/usr/local/ps2dev/iop/bin:/usr/local/ps2dev/dvp/bin:/usr/local/ps2dev/ps2sdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
       - name: Upload ELF Artifact
         uses: actions/upload-artifact@v4
